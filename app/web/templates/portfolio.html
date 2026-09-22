@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Portofolio — Stock Investor{% endblock %}
+{% block content %}
+<div class="header-action">
+  <div>
+    <h1>💼 Rekomendasi Alokasi Dana Tabungan</h1>
+    <p style="color: var(--text-muted); margin: 0.2rem 0 0 0; font-size: 0.9rem;">Alokasi terukur, low-risk, dengan 15% buffer tunai aman</p>
+  </div>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Kode Saham</th>
+        <th>Skor Total</th>
+        <th>Risk Rating</th>
+        <th>Alokasi Dana (Rp)</th>
+        <th>Proporsi (%)</th>
+        <th>Alasan Rekomendasi</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for a in alloc %}
+      <tr>
+        <td><a href="/saham/{{ a.kode }}" class="stock-link">{{ a.kode }}</a></td>
+        <td><strong>{{ "%.1f"|format(a.skor) }}</strong></td>
+        <td><span class="badge {{ a.risk_rating }}">{{ a.risk_rating }}</span></td>
+        <td><strong style="color: #047857;">{{ "Rp {:,.0f}".format(a.alokasi_rp) }}</strong></td>
+        <td>{{ a.persentase }}%</td>
+        <td style="color: var(--text-muted); font-size: 0.9rem;">{{ a.alasan }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          Belum ada rekomendasi. Jalankan scan di Dashboard terlebih dahulu.
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Stock Investor — Alokasi Saham Low-Risk{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #1e293b;
+      --primary-hover: #334155;
+      --border: #e2e8f0;
+      --green: #10b981;
+      --green-bg: #d1fae5;
+      --orange: #f59e0b;
+      --orange-bg: #fef3c7;
+      --red: #ef4444;
+      --red-bg: #fee2e2;
+    }
+
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+    
+    header { background: var(--primary); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .brand { font-size: 1.25rem; font-weight: 700; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+    nav { display: flex; gap: 1rem; }
+    nav a { color: #cbd5e1; text-decoration: none; font-weight: 500; font-size: 0.95rem; padding: 0.4rem 0.8rem; border-radius: 6px; transition: all 0.2s; }
+    nav a:hover, nav a.active { color: white; background: var(--primary-hover); }
+
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+    .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    h1 { margin: 0; font-size: 1.75rem; color: var(--primary); font-weight: 700; }
+
+    .card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card-title { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .card-value { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    
+    .table-container { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+    th { background: #f1f5f9; color: var(--text-muted); font-weight: 600; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; text-transform: uppercase; }
+    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    a.stock-link { color: #2563eb; font-weight: 600; text-decoration: none; }
+    a.stock-link:hover { text-decoration: underline; }
+
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    .badge.LOW, .LOW { color: #047857; background: var(--green-bg); }
+    .badge.MEDIUM, .MEDIUM { color: #b45309; background: var(--orange-bg); }
+    .badge.HIGH, .HIGH { color: #b91c1c; background: var(--red-bg); }
+    
+    .text-green, .BULL, .BUY { color: #059669; font-weight: 600; }
+    .text-red, .BEAR, .SELL { color: #dc2626; font-weight: 600; }
+    .text-neutral, .SIDEWAYS, .NEUTRAL { color: #64748b; font-weight: 500; }
+
+    .btn { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; }
+    .btn:hover { background: var(--primary-hover); }
+
+    footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 3rem; padding-bottom: 2rem; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header>
+    <a href="/dashboard" class="brand">📈 Stock Investor</a>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/portofolio">Portofolio</a>
+      <a href="/api/stocks" target="_blank">API</a>
+    </nav>
+  </header>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+  <footer>
+    Stock Investor — Personal Low-Risk IDX Investment Advisor | Powered by FastAPI + yfinance
+  </footer>
+</body>
+</html>

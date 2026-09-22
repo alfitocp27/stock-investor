@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Stock Investor{% endblock %}
+{% block content %}
+<div class="header-action">
+  <div>
+    <h1>📊 Dashboard Saham IDX</h1>
+    <p style="color: var(--text-muted); margin: 0.2rem 0 0 0; font-size: 0.9rem;">Analisa hybrid saham pilihan & skor alokasi tabungan</p>
+  </div>
+  <form method="post" action="/scan">
+    <button type="submit" class="btn">⚡ Scan Sekarang</button>
+  </form>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Kode</th>
+        <th>Nama / Sektor</th>
+        <th>Skor Total</th>
+        <th>Risk Rating</th>
+        <th>Trend</th>
+        <th>MACD</th>
+        <th>Harga Terakhir</th>
+        <th>RSI (14)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in stocks %}
+      <tr>
+        <td><a href="/saham/{{ s.kode }}" class="stock-link">{{ s.kode }}</a></td>
+        <td>{{ s.nama or '—' }}</td>
+        <td><strong>{{ "%.1f"|format(s.skor) }}</strong> <span style="font-size: 0.8rem; color: #94a3b8;">/100</span></td>
+        <td><span class="badge {{ s.risk }}">{{ s.risk }}</span></td>
+        <td><span class="{{ s.trend }}">{{ s.trend }}</span></td>
+        <td><span class="{{ s.macd }}">{{ s.macd }}</span></td>
+        <td>{{ "Rp {:,.0f}".format(s.harga) if s.harga else '—' }}</td>
+        <td>{{ "%.1f"|format(s.rsi) if s.rsi else '—' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          Belum ada data scan. Klik tombol <strong>Scan Sekarang</strong> untuk memulai analisa.
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

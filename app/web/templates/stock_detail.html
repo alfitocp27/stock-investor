@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ stock.kode }} — Detail Saham{% endblock %}
+{% block content %}
+<div class="header-action">
+  <div>
+    <a href="/dashboard" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">← Kembali ke Dashboard</a>
+    <h1 style="margin-top: 0.4rem;">{{ stock.kode }} — {{ stock.nama or 'Saham' }}</h1>
+  </div>
+</div>
+
+{% if scan %}
+<div class="grid-4">
+  <div class="card">
+    <div class="card-title">Skor Total</div>
+    <div class="card-value">{{ "%.1f"|format(scan.skor_total) }}<span style="font-size: 1rem; color: #94a3b8;">/100</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Risk Rating</div>
+    <div style="margin-top: 0.2rem;"><span class="badge {{ scan.risk_rating }}">{{ scan.risk_rating }}</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Harga Terakhir</div>
+    <div class="card-value" style="font-size: 1.5rem;">{{ "Rp {:,.0f}".format(scan.price) if scan.price else 'N/A' }}</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Trend Pasaran</div>
+    <div class="card-value {{ scan.trend }}" style="font-size: 1.5rem;">{{ scan.trend }}</div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <div class="card">
+    <h3 style="margin-top:0;">📊 Metrik Fundamental</h3>
+    <table style="box-shadow: none;">
+      <tr><td>PE Ratio</td><td><strong>{{ "%.2f"|format(scan.pe) if scan.pe else 'N/A' }}</strong></td></tr>
+      <tr><td>Price to Book (PBV)</td><td><strong>{{ "%.2f"|format(scan.pbv) if scan.pbv else 'N/A' }}</strong></td></tr>
+      <tr><td>Return on Equity (ROE)</td><td><strong>{{ "%.1f%%"|format(scan.roe*100) if scan.roe else 'N/A' }}</strong></td></tr>
+      <tr><td>Debt to Equity Ratio</td><td><strong>{{ "%.2f"|format(scan.debt_ratio) if scan.debt_ratio is not none else 'N/A' }}</strong></td></tr>
+      <tr><td>Dividend Yield</td><td><strong>{{ "%.1f%%"|format(scan.dividend_yield*100) if scan.dividend_yield else 'N/A' }}</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">📈 Indikator Teknikal</h3>
+    <table style="box-shadow: none;">
+      <tr><td>RSI (14)</td><td><strong>{{ "%.1f"|format(scan.rsi) if scan.rsi else 'N/A' }}</strong></td></tr>
+      <tr><td>MACD Signal</td><td><span class="{{ scan.macd_signal }}">{{ scan.macd_signal }}</span></td></tr>
+      <tr><td>Skor Fundamental</td><td><strong>{{ "%.1f"|format(scan.skor_fundamental) }}</strong>/100</td></tr>
+      <tr><td>Skor Teknikal</td><td><strong>{{ "%.1f"|format(scan.skor_technical) }}</strong>/100</td></tr>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <p>Belum ada data scan untuk saham ini. Silakan jalankan scan dari dashboard.</p>
+</div>
+{% endif %}
+{% endblock %}
