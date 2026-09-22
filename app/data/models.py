@@ -59,6 +59,12 @@ class Alert(Base):
     deduplicated = Column(Boolean, default=False)
 
 def get_engine():
+    import os
+    if settings.db_url.startswith("sqlite:///"):
+        db_path = settings.db_url.replace("sqlite:///", "")
+        db_dir = os.path.dirname(db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
     return create_engine(settings.db_url, connect_args={"check_same_thread": False})
 
 def get_session():
