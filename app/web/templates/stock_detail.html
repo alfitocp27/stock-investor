@@ -28,6 +28,24 @@
   </div>
 </div>
 
+<!-- Interactive Chart Section -->
+<div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <h3 style="margin: 0; color: var(--primary);">📈 Grafik Harga & Indikator Teknikal Realtime</h3>
+      <p style="margin: 0.2rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">Harga Penutupan (Close), Moving Average (MA20/MA50), dan RSI(14)</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1M')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #334155;">1M</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('3M')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #334155;">3M</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1Y')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #1e293b;">1Y</button>
+    </div>
+  </div>
+  <div style="position: relative; height: 350px; width: 100%;">
+    <canvas id="stockChart"></canvas>
+  </div>
+</div>
+
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
   <div class="card">
     <h3 style="margin-top:0;">📊 Metrik Fundamental</h3>
@@ -50,6 +68,124 @@
     </table>
   </div>
 </div>
+
+<script>
+  let rawChartData = null;
+  let chartInstance = null;
+
+  async function loadChartData() {
+    try {
+      const response = await fetch('/api/chart/{{ stock.kode }}');
+      if (!response.ok) return;
+      rawChartData = await response.json();
+      renderChart('1Y');
+    } catch (err) {
+      console.error("Failed to load chart data", err);
+    }
+  }
+
+  function renderChart(tf) {
+    if (!rawChartData || !rawChartData.timestamps) return;
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    
+    let count = rawChartData.timestamps.length;
+    if (tf === '1M') count = 22;
+    else if (tf === '3M') count = 66;
+
+    const labels = rawChartData.timestamps.slice(-count);
+    const prices = rawChartData.prices.slice(-count);
+    const ma20 = rawChartData.ma20.slice(-count);
+    const ma50 = rawChartData.ma50.slice(-count);
+    const rsi = rawChartData.rsi.slice(-count);
+
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Harga Close (Rp)',
+            data: prices,
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.05)',
+            borderWidth: 2,
+            fill: true,
+            yAxisID: 'yPrice',
+            pointRadius: 1,
+            pointHoverRadius: 5
+          },
+          {
+            label: 'MA20',
+            data: ma20,
+            borderColor: '#f59e0b',
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yPrice'
+          },
+          {
+            label: 'MA50',
+            data: ma50,
+            borderColor: '#8b5cf6',
+            borderWidth: 1.5,
+            borderDash: [2, 2],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yPrice'
+          },
+          {
+            label: 'RSI(14)',
+            data: rsi,
+            borderColor: '#10b981',
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yRsi'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { grid: { display: false } },
+          yPrice: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Harga (Rp)' },
+            grid: { color: '#f1f5f9' }
+          },
+          yRsi: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'RSI' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  function setChartTimeframe(tf) {
+    document.querySelectorAll('.timeframe-btn').forEach(btn => {
+      btn.style.background = '#334155';
+    });
+    event.target.style.background = '#1e293b';
+    renderChart(tf);
+  }
+
+  document.addEventListener('DOMContentLoaded', loadChartData);
+</script>
 {% else %}
 <div class="card">
   <p>Belum ada data scan untuk saham ini. Silakan jalankan scan dari dashboard.</p>
