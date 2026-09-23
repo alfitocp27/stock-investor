@@ -3,8 +3,24 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import joinedload
+from app.data.cache import get_cached_or_fetch
+from app.data.fetcher import fetch_stock_data
 from app.data.models import get_session, Stock, ScanResult
 from app.risk.allocator import allocate_portfolio
+import numpy as np
+
+
+def _clean_float(v):
+    """Convert a numpy scalar to a JSON-safe float, or None when missing."""
+    if v is None:
+        return None
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    if np.isnan(f) or np.isinf(f):
+        return None
+    return f
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 os.makedirs(templates_dir, exist_ok=True)
@@ -73,6 +89,59 @@ async def portfolio_page(request: Request):
             return HTMLResponse(content=html)
     finally:
         session.close()
+
+@router.get("/api/chart/{kode}")
+async def api_chart(kode: str):
+    """Data seri harga + indikator (MA20, MA50, RSI) untuk chart interaktif realtime."""
+    session = get_session()
+    try:
+        data = get_cached_or_fetch(kode, session=session)
+    finally:
+        session.close()
+
+    prices_1y = data.get("prices_1y")
+
+    if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
+        # Cache hits return metadata only (prices_1y is not persisted), so
+        # refetch to obtain the actual price series for the chart.
+        if data.get("error") is None and data.get("price") is not None:
+            data = fetch_stock_data(kode)
+            prices_1y = data.get("prices_1y")
+
+    if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
+        return {
+            "kode": data.get("kode") or kode,
+            "timestamps": [],
+            "prices": [],
+            "rsi": [],
+            "ma20": [],
+            "ma50": [],
+        }
+
+    close = prices_1y["Close"]
+
+    # Simple-moving-average (SMA20 / SMA50)
+    ma20 = close.rolling(20, min_periods=1).mean()
+    ma50 = close.rolling(50, min_periods=1).mean()
+
+    # RSI(14)
+    delta = close.diff()
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
+    avg_gain = gain.ewm(alpha=1 / 14, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1 / 14, adjust=False).mean()
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi = 100 - (100 / (1 + rs))
+
+    return {
+        "kode": data.get("kode") or kode,
+        "timestamps": [ts.strftime("%Y-%m-%d") for ts in prices_1y.index],
+        "prices": [_clean_float(v) for v in close],
+        "rsi": [_clean_float(v) for v in rsi],
+        "ma20": [_clean_float(v) for v in ma20],
+        "ma50": [_clean_float(v) for v in ma50],
+    }
+
 
 @router.post("/scan")
 async def trigger_scan():
