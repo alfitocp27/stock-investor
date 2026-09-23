@@ -112,10 +112,10 @@ def test_api_chart_no_price_data_returns_empty_series(mock_gcof):
 @patch("app.web.routes.fetch_stock_data")
 @patch("app.web.routes.get_cached_or_fetch")
 def test_api_chart_refetches_when_cache_hit_omits_prices(mock_gcof, mock_fetch):
-    """Cache hits return metadata only (no price series); refetch so the chart renders."""
+    """Cache hits return metadata only (price is None and prices_1y is None); refetch so the chart renders."""
     mock_gcof.return_value = {
         "kode": "BBCA.JK",
-        "price": 9000.0,
+        "price": None,
         "error": None,
         "prices_1y": None,
     }

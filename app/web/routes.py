@@ -104,7 +104,7 @@ async def api_chart(kode: str):
     if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
         # Cache hits return metadata only (prices_1y is not persisted), so
         # refetch to obtain the actual price series for the chart.
-        if data.get("error") is None and data.get("price") is not None:
+        if data.get("error") is None:
             data = fetch_stock_data(kode)
             prices_1y = data.get("prices_1y")
 
