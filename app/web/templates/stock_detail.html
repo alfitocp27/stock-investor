@@ -3,8 +3,8 @@
 {% block content %}
 <div class="header-action">
   <div>
-    <a href="/dashboard" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">← Kembali ke Dashboard</a>
-    <h1 style="margin-top: 0.4rem;">{{ stock.kode }} — {{ stock.nama or 'Saham' }}</h1>
+    <a href="/dashboard" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600;">← Kembali ke Dashboard</a>
+    <h1 style="margin-top: 0.3rem;">{{ stock.kode }} — {{ stock.nama or 'Saham' }}</h1>
   </div>
 </div>
 
@@ -12,7 +12,7 @@
 <div class="grid-4">
   <div class="card">
     <div class="card-title">Skor Total</div>
-    <div class="card-value">{{ "%.1f"|format(scan.skor_total) }}<span style="font-size: 1rem; color: #94a3b8;">/100</span></div>
+    <div class="card-value">{{ "%.1f"|format(scan.skor_total) }}<span style="font-size: 1rem; color: var(--text-muted);">/100</span></div>
   </div>
   <div class="card">
     <div class="card-title">Risk Rating</div>
@@ -28,29 +28,29 @@
   </div>
 </div>
 
-<!-- AI-like Automated Analysis Insight Panel -->
-<div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(to right, #f8fafc, #ffffff); border-left: 4px solid var(--primary);">
-  <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-    🧠 Rangkuman Analisis & Rekomendasi Alokasi
+<!-- Automated Analysis Insight Panel -->
+<div class="card" style="margin-bottom: 1.5rem; background: #0f172a; border-left: 4px solid var(--primary);">
+  <h3 style="margin: 0 0 0.5rem 0; font-size: 1.05rem; color: var(--text); font-weight: 700;">
+    ANALISIS & REKOMENDASI ALOKASI
   </h3>
-  <div style="font-size: 0.95rem; color: var(--text);">
+  <div style="font-size: 0.9rem; color: var(--text);">
     {% if scan.risk_rating == 'LOW' and scan.skor_total >= 60 %}
-      <p style="margin: 0.3rem 0; color: #047857; font-weight: 600;">
-        ✅ Rekomendasi: SANGAT LAYAK (Skor Tinggi & Low Risk)
+      <p style="margin: 0.3rem 0; color: var(--green-text); font-weight: 700;">
+        REKOMENDASI: SANGAT LAYAK (Skor Tinggi & Low Risk)
       </p>
       <p style="margin: 0.2rem 0; color: var(--text-muted);">
         Saham ini memiliki kondisi fundamental stabil dan risiko terukur. Sangat cocok dimasukkan ke dalam alokasi dana tabungan.
       </p>
     {% elif scan.risk_rating == 'HIGH' %}
-      <p style="margin: 0.3rem 0; color: #b91c1c; font-weight: 600;">
-        ⚠️ Rekomendasi: HINDARI / TAHUNAN RISIKO TINGGI
+      <p style="margin: 0.3rem 0; color: var(--red-text); font-weight: 700;">
+        REKOMENDASI: HINDARI / RISIKO TINGGI
       </p>
       <p style="margin: 0.2rem 0; color: var(--text-muted);">
         Memiliki volatilitas atau rasio utang tinggi. Sistem mengeliminasi saham ini dari rekomendasi alokasi otomatis demi keamanan tabungan.
       </p>
     {% else %}
-      <p style="margin: 0.3rem 0; color: #b45309; font-weight: 600;">
-        ⚖️ Rekomendasi: NETRAL / PANTAU
+      <p style="margin: 0.3rem 0; color: var(--orange-text); font-weight: 700;">
+        REKOMENDASI: NETRAL / PANTAU
       </p>
       <p style="margin: 0.2rem 0; color: var(--text-muted);">
         Saham berisiko sedang. Lakukan pemantauan pergerakan indikator teknikal (MACD & RSI) sebelum eksekusi.
@@ -60,16 +60,19 @@
 </div>
 
 <!-- Interactive Chart Section -->
-<div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+<div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
     <div>
-      <h3 style="margin: 0; color: var(--primary);">📈 Grafik Harga & Indikator Teknikal Realtime</h3>
-      <p style="margin: 0.2rem 0 0 0; color: var(--text-muted); font-size: 0.85rem;">Harga Penutupan (Close), Moving Average (MA20/MA50), dan RSI(14)</p>
+      <h3 style="margin: 0; color: var(--text); font-size: 1.1rem;">GRAFIK HARGA & INDIKATOR TEKNIKAL</h3>
+      <p style="margin: 0.2rem 0 0 0; color: var(--text-muted); font-size: 0.8rem;">Harga Penutupan (Close), Moving Average (MA20/MA50), dan RSI(14)</p>
     </div>
-    <div style="display: flex; gap: 0.5rem;">
-      <button class="btn timeframe-btn" onclick="setChartTimeframe('1M')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #334155;">1M</button>
-      <button class="btn timeframe-btn" onclick="setChartTimeframe('3M')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #334155;">3M</button>
-      <button class="btn timeframe-btn" onclick="setChartTimeframe('1Y')" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: #1e293b;">1Y</button>
+    <div style="display: flex; gap: 0.4rem;">
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1m')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #334155;">1M</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('5m')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #334155;">5M</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('15m')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #334155;">15M</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1h')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #334155;">1H</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1D')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #334155;">1D</button>
+      <button class="btn timeframe-btn" onclick="setChartTimeframe('1Y')" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #1d4ed8;">1Y</button>
     </div>
   </div>
   <div style="position: relative; height: 350px; width: 100%;">
@@ -80,14 +83,14 @@
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
   <!-- Fundamental Metrics & Progress Bars -->
   <div class="card">
-    <h3 style="margin-top:0;">📊 Metrik Fundamental</h3>
+    <h3 style="margin-top:0; font-size: 1rem;">METRIK FUNDAMENTAL</h3>
     <div style="margin-bottom: 1rem;">
-      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">
-        <span>Skor Fundamental</span>
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem;">
+        <span>SKOR FUNDAMENTAL</span>
         <span>{{ "%.1f"|format(scan.skor_fundamental) }}/100</span>
       </div>
-      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-        <div style="width: {{ scan.skor_fundamental }}%; height: 100%; background: #2563eb; border-radius: 4px;"></div>
+      <div style="width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+        <div style="width: {{ scan.skor_fundamental }}%; height: 100%; background: #3b82f6; border-radius: 3px;"></div>
       </div>
     </div>
     <table style="box-shadow: none;">
@@ -101,14 +104,14 @@
 
   <!-- Technical Metrics & Progress Bars -->
   <div class="card">
-    <h3 style="margin-top:0;">📈 Indikator Teknikal</h3>
+    <h3 style="margin-top:0; font-size: 1rem;">INDIKATOR TEKNIKAL</h3>
     <div style="margin-bottom: 1rem;">
-      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">
-        <span>Skor Teknikal</span>
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem;">
+        <span>SKOR TEKNIKAL</span>
         <span>{{ "%.1f"|format(scan.skor_technical) }}/100</span>
       </div>
-      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-        <div style="width: {{ scan.skor_technical }}%; height: 100%; background: #10b981; border-radius: 4px;"></div>
+      <div style="width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+        <div style="width: {{ scan.skor_technical }}%; height: 100%; background: #10b981; border-radius: 3px;"></div>
       </div>
     </div>
     <table style="box-shadow: none;">
@@ -122,31 +125,29 @@
 <script>
   let rawChartData = null;
   let chartInstance = null;
+  let currentTimeframe = '1Y';
 
-  async function loadChartData() {
+  async function loadChartData(tf = '1Y') {
+    currentTimeframe = tf;
     try {
-      const response = await fetch('/api/chart/{{ stock.kode }}');
+      const response = await fetch(`/api/chart/{{ stock.kode }}?timeframe=${tf}`);
       if (!response.ok) return;
       rawChartData = await response.json();
-      renderChart('1Y');
+      renderChart();
     } catch (err) {
       console.error("Failed to load chart data", err);
     }
   }
 
-  function renderChart(tf) {
+  function renderChart() {
     if (!rawChartData || !rawChartData.timestamps) return;
     const ctx = document.getElementById('stockChart').getContext('2d');
     
-    let count = rawChartData.timestamps.length;
-    if (tf === '1M') count = 22;
-    else if (tf === '3M') count = 66;
-
-    const labels = rawChartData.timestamps.slice(-count);
-    const prices = rawChartData.prices.slice(-count);
-    const ma20 = rawChartData.ma20.slice(-count);
-    const ma50 = rawChartData.ma50.slice(-count);
-    const rsi = rawChartData.rsi.slice(-count);
+    const labels = rawChartData.timestamps;
+    const prices = rawChartData.prices;
+    const ma20 = rawChartData.ma20;
+    const ma50 = rawChartData.ma50;
+    const rsi = rawChartData.rsi;
 
     if (chartInstance) {
       chartInstance.destroy();
@@ -160,8 +161,8 @@
           {
             label: 'Harga Close (Rp)',
             data: prices,
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.05)',
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
             borderWidth: 2,
             fill: true,
             yAxisID: 'yPrice',
@@ -173,7 +174,7 @@
             data: ma20,
             borderColor: '#f59e0b',
             borderWidth: 1.5,
-            borderDash: [4, 4],
+            borderDash: [3, 3],
             pointRadius: 0,
             fill: false,
             yAxisID: 'yPrice'
@@ -192,7 +193,7 @@
             label: 'RSI(14)',
             data: rsi,
             borderColor: '#10b981',
-            borderWidth: 1,
+            borderWidth: 1.2,
             pointRadius: 0,
             fill: false,
             yAxisID: 'yRsi'
@@ -203,14 +204,18 @@
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#9ca3af', font: { size: 11, weight: 'bold' } } }
+        },
         scales: {
-          x: { grid: { display: false } },
+          x: { grid: { color: 'rgba(31, 41, 55, 0.5)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
           yPrice: {
             type: 'linear',
             display: true,
             position: 'left',
-            title: { display: true, text: 'Harga (Rp)' },
-            grid: { color: '#f1f5f9' }
+            title: { display: true, text: 'Harga (Rp)', color: '#9ca3af' },
+            grid: { color: 'rgba(31, 41, 55, 0.5)' },
+            ticks: { color: '#9ca3af', font: { size: 10 } }
           },
           yRsi: {
             type: 'linear',
@@ -218,8 +223,9 @@
             position: 'right',
             min: 0,
             max: 100,
-            title: { display: true, text: 'RSI' },
-            grid: { display: false }
+            title: { display: true, text: 'RSI', color: '#10b981' },
+            grid: { display: false },
+            ticks: { color: '#10b981', font: { size: 10 } }
           }
         }
       }
@@ -230,11 +236,11 @@
     document.querySelectorAll('.timeframe-btn').forEach(btn => {
       btn.style.background = '#334155';
     });
-    event.target.style.background = '#1e293b';
-    renderChart(tf);
+    event.target.style.background = '#1d4ed8';
+    loadChartData(tf);
   }
 
-  document.addEventListener('DOMContentLoaded', loadChartData);
+  document.addEventListener('DOMContentLoaded', () => loadChartData('1Y'));
 </script>
 {% else %}
 <div class="card">

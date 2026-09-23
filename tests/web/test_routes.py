@@ -65,7 +65,7 @@ def test_api_chart_status_200(mock_gcof):
     assert r.status_code == 200
     payload = r.json()
     assert set(payload.keys()) == {
-        "kode", "timestamps", "prices", "rsi", "ma20", "ma50",
+        "kode", "timeframe", "timestamps", "prices", "rsi", "ma20", "ma50",
     }
     assert payload["kode"] == "BBCA.JK"
     for key in ("timestamps", "prices", "rsi", "ma20", "ma50"):

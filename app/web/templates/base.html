@@ -6,7 +6,7 @@
   <title>{% block title %}Stock Investor — Terminal Portfolio Pro{% endblock %}</title>
   <style>
     :root {
-      /* Dark Theme (Default) */
+      /* Deep Dark Pro Theme */
       --bg: #090d16;
       --card-bg: #111827;
       --card-border: #1f2937;
@@ -17,23 +17,22 @@
       --primary: #3b82f6;
       --primary-hover: #2563eb;
       --accent: #10b981;
-      --accent-gold: #f59e0b;
       
       /* Status Colors */
       --green: #10b981;
-      --green-bg: rgba(16, 185, 129, 0.15);
+      --green-bg: rgba(16, 185, 129, 0.12);
       --green-text: #34d399;
       
       --orange: #f59e0b;
-      --orange-bg: rgba(245, 158, 11, 0.15);
+      --orange-bg: rgba(245, 158, 11, 0.12);
       --orange-text: #fbbf24;
       
       --red: #ef4444;
-      --red-bg: rgba(239, 68, 68, 0.15);
+      --red-bg: rgba(239, 68, 68, 0.12);
       --red-text: #f87171;
 
       --blue: #3b82f6;
-      --blue-bg: rgba(59, 130, 246, 0.15);
+      --blue-bg: rgba(59, 130, 246, 0.12);
       --blue-text: #60a5fa;
     }
 
@@ -62,19 +61,20 @@
     }
 
     .brand {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: var(--text);
       text-decoration: none;
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.05em;
     }
 
     .brand-badge {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
+      background: #1e3a8a;
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
       font-size: 0.65rem;
       padding: 0.15rem 0.45rem;
       border-radius: 4px;
@@ -115,7 +115,7 @@
 
     h1 {
       margin: 0;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       color: var(--text);
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -230,14 +230,47 @@
 
     .btn:hover {
       background: var(--primary-hover);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
     }
 
-    /* Mini sparkline styling */
     .sparkline-canvas {
       width: 100px;
       height: 32px;
       display: block;
+    }
+
+    /* Toast Notification Container */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: #1f2937;
+      color: #f3f4f6;
+      border-left: 4px solid #3b82f6;
+      padding: 0.85rem 1.25rem;
+      border-radius: 6px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      font-size: 0.88rem;
+      font-weight: 600;
+      min-width: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: slideIn 0.25s ease-out;
+    }
+
+    .toast.success { border-left-color: #10b981; }
+    .toast.error { border-left-color: #ef4444; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     footer {
@@ -256,7 +289,7 @@
 <body>
   <header>
     <a href="/dashboard" class="brand">
-      📊 STOCK INVESTOR <span class="brand-badge">PRO TERMINAL</span>
+      STOCK INVESTOR <span class="brand-badge">PRO TERMINAL</span>
     </a>
     <nav>
       <a href="/dashboard" class="active">Dashboard</a>
@@ -267,8 +300,25 @@
   <div class="container">
     {% block content %}{% endblock %}
   </div>
+  <div id="toast-container"></div>
   <footer>
     Stock Investor — Professional Low-Risk IDX Analytics Terminal | Dark Mode Powered by FastAPI + Chart.js
   </footer>
+
+  <script>
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+  </script>
 </body>
 </html>

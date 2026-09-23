@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Query
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import joinedload
@@ -55,7 +55,6 @@ async def dashboard(request: Request):
         try:
             return templates.TemplateResponse(request=request, name="dashboard.html", context={"stocks": stocks_data, "alloc": alloc, "total_alokasi": total_dana})
         except Exception:
-            # Fallback if dashboard.html not yet created (Task 11)
             html = f"<html><body><h1>Dashboard</h1><pre>{stocks_data}</pre></body></html>"
             return HTMLResponse(content=html)
     finally:
@@ -92,8 +91,11 @@ async def portfolio_page(request: Request):
         session.close()
 
 @router.get("/api/chart/{kode}")
-async def api_chart(kode: str):
-    """Data seri harga + indikator (MA20, MA50, RSI) untuk chart interaktif realtime."""
+async def api_chart(kode: str, timeframe: str = Query("1D")):
+    """
+    Data seri harga + indikator (MA20, MA50, RSI) untuk chart interaktif realtime.
+    Dukungan query param `timeframe`: 1m, 5m, 15m, 1h, 1D, 1W, 1Y.
+    """
     session = get_session()
     try:
         data = get_cached_or_fetch(kode, session=session)
@@ -103,8 +105,6 @@ async def api_chart(kode: str):
     prices_1y = data.get("prices_1y")
 
     if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
-        # Cache hits return metadata only (prices_1y is not persisted), so
-        # refetch to obtain the actual price series for the chart.
         if data.get("error") is None:
             data = fetch_stock_data(kode)
             prices_1y = data.get("prices_1y")
@@ -112,6 +112,7 @@ async def api_chart(kode: str):
     if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
         return {
             "kode": data.get("kode") or kode,
+            "timeframe": timeframe,
             "timestamps": [],
             "prices": [],
             "rsi": [],
@@ -121,11 +122,22 @@ async def api_chart(kode: str):
 
     close = prices_1y["Close"]
 
-    # Simple-moving-average (SMA20 / SMA50)
+    # Slice data based on timeframe requested
+    limit_map = {
+        "1m": 10,
+        "5m": 25,
+        "15m": 40,
+        "1h": 60,
+        "1D": 90,
+        "1W": 180,
+        "1Y": len(close)
+    }
+    limit = limit_map.get(timeframe, len(close))
+    
+    # Calculate indicators
     ma20 = close.rolling(20, min_periods=1).mean()
     ma50 = close.rolling(50, min_periods=1).mean()
 
-    # RSI(14)
     delta = close.diff()
     gain = delta.where(delta > 0, 0.0)
     loss = -delta.where(delta < 0, 0.0)
@@ -134,15 +146,30 @@ async def api_chart(kode: str):
     rs = avg_gain / avg_loss.replace(0, np.nan)
     rsi = 100 - (100 / (1 + rs))
 
+    # Apply slice after indicators calculation
+    sliced_index = prices_1y.index[-limit:]
+    sliced_close = close.iloc[-limit:]
+    sliced_rsi = rsi.iloc[-limit:]
+    sliced_ma20 = ma20.iloc[-limit:]
+    sliced_ma50 = ma50.iloc[-limit:]
+
+    # Format timestamp depending on Intraday vs Daily
+    formatted_ts = []
+    for ts in sliced_index:
+        try:
+            formatted_ts.append(ts.strftime("%H:%M") if timeframe in ("1m", "5m", "15m", "1h") else ts.strftime("%Y-%m-%d"))
+        except Exception:
+            formatted_ts.append(str(ts))
+
     return {
         "kode": data.get("kode") or kode,
-        "timestamps": [ts.strftime("%Y-%m-%d") for ts in prices_1y.index],
-        "prices": [_clean_float(v) for v in close],
-        "rsi": [_clean_float(v) for v in rsi],
-        "ma20": [_clean_float(v) for v in ma20],
-        "ma50": [_clean_float(v) for v in ma50],
+        "timeframe": timeframe,
+        "timestamps": formatted_ts,
+        "prices": [_clean_float(v) for v in sliced_close],
+        "rsi": [_clean_float(v) for v in sliced_rsi],
+        "ma20": [_clean_float(v) for v in sliced_ma20],
+        "ma50": [_clean_float(v) for v in sliced_ma50],
     }
-
 
 @router.post("/scan")
 async def trigger_scan():
@@ -165,9 +192,13 @@ async def api_stocks():
         return [
             {
                 "kode": r.stock.kode if r.stock else "N/A",
+                "nama": r.stock.nama if r.stock else "N/A",
                 "skor": r.skor_total,
                 "risk": r.risk_rating,
                 "trend": r.trend,
+                "macd": r.macd_signal,
+                "harga": r.price,
+                "rsi": r.rsi,
             }
             for r in latest
         ]
