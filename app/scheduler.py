@@ -11,7 +11,7 @@ def run_full_scan(session) -> dict:
     prev_results = {}
     for kode in settings.idx_watchlist:
         try:
-            data = get_cached_or_fetch(kode)
+            data = get_cached_or_fetch(kode, session=session)
             if data.get("error"):
                 errors.append(f"{kode}: {data['error']}")
                 continue

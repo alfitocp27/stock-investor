@@ -3,13 +3,16 @@ from app.data.models import get_session, Stock
 from app.data.fetcher import fetch_stock_data
 from app.config import settings
 
-def get_cached_or_fetch(kode: str) -> dict:
+def get_cached_or_fetch(kode: str, session=None) -> dict:
     """
     Cek cache di DB (tabel stocks). Jika TTL expired atau data kosong,
     fetch dari yfinance lalu simpan ke DB.
     Returns dict dari fetch_stock_data (sama shape).
     """
-    session = get_session()
+    own_session = False
+    if session is None:
+        session = get_session()
+        own_session = True
     try:
         stock = session.query(Stock).filter_by(kode=kode).first()
         now = datetime.utcnow()
@@ -42,7 +45,9 @@ def get_cached_or_fetch(kode: str) -> dict:
             stock.sektor = data.get("sector")
             stock.market_cap = data.get("market_cap")
             stock.last_updated = now
-            session.commit()
+            if own_session:
+                session.commit()
         return data
     finally:
-        session.close()
+        if own_session:
+            session.close()
