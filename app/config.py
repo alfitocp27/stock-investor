@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     telegram_token: str = ""
     telegram_chat_id: str = ""
 
-    # Database
-    db_url: str = "sqlite:///D:/projek/stock-investor/data/stock_investor.db"
+    # Database (relatif terhadap direktori project agar dapat berjalan di PC/laptop mana pun)
+    db_url: str = f"sqlite:///{Path(__file__).parent.parent / 'data' / 'stock_investor.db'}"
 
     class Config:
         env_prefix = "SI_"
