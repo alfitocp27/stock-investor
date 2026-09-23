@@ -136,4 +136,4 @@ def test_api_chart_refetches_when_cache_hit_omits_prices(mock_gcof, mock_fetch):
     assert payload["kode"] == "BBCA.JK"
     assert len(payload["prices"]) == 80
     assert payload["ma50"][49] is not None
-    mock_fetch.assert_called_once_with("BBCA.JK")
+    mock_fetch.assert_called_once_with("BBCA.JK", interval="1d")

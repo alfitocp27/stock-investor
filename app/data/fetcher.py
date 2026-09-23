@@ -1,6 +1,5 @@
 import yfinance as yf
 import pandas as pd
-
 import requests
 
 HEADERS = {
@@ -8,11 +7,24 @@ HEADERS = {
 }
 
 
-def fetch_stock_data(kode: str, lookback_days: int = 365) -> dict:
+def fetch_stock_data(kode: str, lookback_days: int = 365, interval: str = "1d") -> dict:
     """
     Ambil data saham IDX dari Yahoo Finance.
-    Returns dict with fundamental + price history. Handles 429/crumb rate limits gracefully.
+    Param `interval`: '1d', '1m', '5m', '15m', '60m' (untuk data menit/intraday realtime).
     """
+    period_map = {
+        "1m": "1d",
+        "5m": "5d",
+        "15m": "5d",
+        "60m": "1mo",
+        "1h": "1mo",
+        "1d": f"{lookback_days}d",
+        "1D": f"{lookback_days}d",
+        "1Y": f"{lookback_days}d",
+    }
+    period = period_map.get(interval, f"{lookback_days}d")
+    yf_interval = "1m" if interval == "1m" else ("5m" if interval == "5m" else ("15m" if interval == "15m" else ("60m" if interval in ("1h", "60m") else "1d")))
+
     result = {
         "kode": kode,
         "price": None,
@@ -27,8 +39,6 @@ def fetch_stock_data(kode: str, lookback_days: int = 365) -> dict:
         "error": None,
     }
 
-    # Try the pinned yfinance stack first (uses curl_cffi TLS fingerprinting,
-    # which is currently the only reliable way past Yahoo's rate limits).
     try:
         ticker = yf.Ticker(kode)
 
@@ -36,7 +46,6 @@ def fetch_stock_data(kode: str, lookback_days: int = 365) -> dict:
         try:
             info = ticker.info or {}
         except Exception:
-            # yfinance quoteSummary endpoints fail frequently on 429 / crumb errors
             pass
 
         result["price"] = info.get("currentPrice") or info.get("previousClose")
@@ -49,25 +58,25 @@ def fetch_stock_data(kode: str, lookback_days: int = 365) -> dict:
         result["market_cap"] = info.get("marketCap")
 
         try:
-            hist = ticker.history(period=f"{lookback_days}d")
+            hist = ticker.history(period=period, interval=yf_interval)
             result["prices_1y"] = hist
             if not hist.empty and result["price"] is None:
                 result["price"] = float(hist["Close"].iloc[-1])
         except Exception:
             pass
 
-        if result["price"] is not None:
+        if result["price"] is not None and not result["prices_1y"].empty:
             return result
     except Exception as e:
         last_yf_error = str(e)
     else:
         last_yf_error = None
 
-    # Fallback: direct Yahoo chart API (public, no crumb required).
+    # Fallback: direct Yahoo chart API (intraday interval supported)
     try:
         session = requests.Session()
         session.headers.update(HEADERS)
-        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{kode}?range=1y&interval=1d"
+        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{kode}?range={period}&interval={yf_interval}"
         resp = session.get(url, timeout=15)
         if resp.status_code == 200:
             chart_res = resp.json().get("chart", {}).get("result", [])
@@ -78,7 +87,7 @@ def fetch_stock_data(kode: str, lookback_days: int = 365) -> dict:
                 timestamps = chart_res[0].get("timestamp", [])
                 indicators = chart_res[0].get("indicators", {}).get("quote", [{}])[0]
                 if timestamps and indicators:
-                    df = pd.DataFrame(indicators, index=pd.to_datetime(timestamps, unit="s"))
+                    df = pd.DataFrame(indicators, index=pd.to_datetime(timestamps, unit="s", utc=True).tz_convert("Asia/Jakarta"))
                     df.rename(
                         columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"},
                         inplace=True,

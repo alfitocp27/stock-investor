@@ -94,20 +94,23 @@ async def portfolio_page(request: Request):
 async def api_chart(kode: str, timeframe: str = Query("1D")):
     """
     Data seri harga + indikator (MA20, MA50, RSI) untuk chart interaktif realtime.
-    Dukungan query param `timeframe`: 1m, 5m, 15m, 1h, 1D, 1W, 1Y.
+    Dukungan timeframe intraday menit (1m, 5m, 15m, 1h) dan harian (1D, 1W, 1Y).
     """
-    session = get_session()
-    try:
-        data = get_cached_or_fetch(kode, session=session)
-    finally:
-        session.close()
+    if timeframe in ("1m", "5m", "15m", "1h"):
+        data = fetch_stock_data(kode, interval=timeframe)
+        prices_1y = data.get("prices_1y")
+    else:
+        session = get_session()
+        try:
+            data = get_cached_or_fetch(kode, session=session)
+        finally:
+            session.close()
 
-    prices_1y = data.get("prices_1y")
-
-    if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
-        if data.get("error") is None:
-            data = fetch_stock_data(kode)
-            prices_1y = data.get("prices_1y")
+        prices_1y = data.get("prices_1y")
+        if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
+            if data.get("error") is None:
+                data = fetch_stock_data(kode, interval="1d")
+                prices_1y = data.get("prices_1y")
 
     if prices_1y is None or getattr(prices_1y, "empty", True) or "Close" not in prices_1y.columns:
         return {
