@@ -37,9 +37,11 @@ async def dashboard(request: Request):
     session = get_session()
     try:
         latest = session.query(ScanResult).options(joinedload(ScanResult.stock)).order_by(ScanResult.timestamp.desc()).limit(50).all()
-        stocks_data = [
-            {
-                "kode": r.stock.kode if r.stock else "N/A",
+        stocks_data = []
+        for r in latest:
+            kode = r.stock.kode if r.stock else "N/A"
+            stocks_data.append({
+                "kode": kode,
                 "nama": r.stock.nama if r.stock else "N/A",
                 "skor": r.skor_total,
                 "risk": r.risk_rating,
@@ -47,12 +49,11 @@ async def dashboard(request: Request):
                 "macd": r.macd_signal,
                 "harga": r.price,
                 "rsi": r.rsi,
-            }
-            for r in latest
-        ]
+            })
         alloc = allocate_portfolio(latest)
+        total_dana = sum(a["alokasi_rp"] for a in alloc)
         try:
-            return templates.TemplateResponse(request=request, name="dashboard.html", context={"stocks": stocks_data, "alloc": alloc})
+            return templates.TemplateResponse(request=request, name="dashboard.html", context={"stocks": stocks_data, "alloc": alloc, "total_alokasi": total_dana})
         except Exception:
             # Fallback if dashboard.html not yet created (Task 11)
             html = f"<html><body><h1>Dashboard</h1><pre>{stocks_data}</pre></body></html>"

@@ -1,30 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Stock Investor{% endblock %}
+{% block title %}Terminal Dashboard — Stock Investor PRO{% endblock %}
 {% block content %}
-<div class="header-action">
+<!-- Header Action Section -->
+<div class="header-action" style="margin-bottom: 1.25rem;">
   <div>
-    <h1>📊 Dashboard Saham IDX</h1>
-    <p style="color: var(--text-muted); margin: 0.2rem 0 0 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-      Analisa hybrid saham pilihan & skor alokasi tabungan
-      <span style="display: inline-flex; align-items: center; gap: 0.3rem; background: #e2e8f0; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> 🟢 Realtime Feed: Active
+    <h1 style="display: flex; align-items: center; gap: 0.6rem;">
+      📊 LIVE MARKET ANALYTICS
+    </h1>
+    <p style="color: var(--text-muted); margin: 0.25rem 0 0 0; font-size: 0.88rem; display: flex; align-items: center; gap: 0.6rem;">
+      Analisis Hybrid & Pergerakan Realtime Saham Pilihan
+      <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 0.15rem 0.55rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700;">
+        <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981;"></span> LIVE FEED
       </span>
     </p>
   </div>
   <form method="post" action="/scan">
-    <button type="submit" class="btn">⚡ Scan Sekarang</button>
+    <button type="submit" class="btn" style="background: #1d4ed8; border: 1px solid #3b82f6;">
+      ⚡ SCAN MARKET SEKARANG
+    </button>
   </form>
 </div>
 
+<!-- Hero Section: Featured Interactive Pro Chart -->
+<div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem; background: #0f172a; border: 1px solid #1e293b;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <select id="mainChartStockSelect" onchange="switchMainChartStock(this.value)" style="background: #1e293b; color: #f3f4f6; border: 1px solid #334155; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
+        {% for s in stocks %}
+          <option value="{{ s.kode }}">{{ s.kode }} — {{ s.nama or 'Saham' }}</option>
+        {% else %}
+          <option value="BBCA.JK">BBCA.JK — Bank Central Asia</option>
+        {% endfor %}
+      </select>
+      <div id="selectedStockMetrics" style="display: flex; gap: 1rem; align-items: center; font-size: 0.88rem;">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+    <div style="display: flex; gap: 0.4rem;">
+      <button class="btn timeframe-btn-main" onclick="setMainTimeframe('1M')" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; background: #334155;">1M</button>
+      <button class="btn timeframe-btn-main" onclick="setMainTimeframe('3M')" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; background: #334155;">3M</button>
+      <button class="btn timeframe-btn-main" onclick="setMainTimeframe('1Y')" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; background: #1d4ed8;">1Y</button>
+    </div>
+  </div>
+  <div style="position: relative; height: 320px; width: 100%;">
+    <canvas id="heroStockChart"></canvas>
+  </div>
+</div>
+
+<!-- Watchlist Stock Table with Mini Sparklines -->
 <div class="table-container">
   <table>
     <thead>
       <tr>
         <th>Kode</th>
         <th>Nama / Sektor</th>
+        <th>Trend Mini (Chart)</th>
         <th>Skor Total</th>
         <th>Risk Rating</th>
-        <th>Trend</th>
+        <th>Trend Pasaran</th>
         <th>MACD</th>
         <th>Harga Terakhir</th>
         <th>RSI (14)</th>
@@ -32,20 +65,23 @@
     </thead>
     <tbody id="stocksTableBody">
     {% for s in stocks %}
-      <tr>
-        <td><a href="/saham/{{ s.kode }}" class="stock-link">{{ s.kode }}</a></td>
-        <td>{{ s.nama or '—' }}</td>
-        <td><strong>{{ "%.1f"|format(s.skor) }}</strong> <span style="font-size: 0.8rem; color: #94a3b8;">/100</span></td>
+      <tr id="row-{{ s.kode }}">
+        <td><a href="/saham/{{ s.kode }}" class="stock-link" style="font-size: 0.95rem;">{{ s.kode }}</a></td>
+        <td><span style="color: var(--text); font-weight: 600;">{{ s.nama or '—' }}</span></td>
+        <td>
+          <canvas id="sparkline-{{ s.kode }}" class="sparkline-canvas" width="100" height="32"></canvas>
+        </td>
+        <td><strong>{{ "%.1f"|format(s.skor) }}</strong> <span style="font-size: 0.75rem; color: var(--text-dim);">/100</span></td>
         <td><span class="badge {{ s.risk }}">{{ s.risk }}</span></td>
         <td><span class="{{ s.trend }}">{{ s.trend }}</span></td>
         <td><span class="{{ s.macd }}">{{ s.macd }}</span></td>
-        <td>{{ "Rp {:,.0f}".format(s.harga) if s.harga else '—' }}</td>
+        <td><strong style="color: var(--text);">{{ "Rp {:,.0f}".format(s.harga) if s.harga else '—' }}</strong></td>
         <td>{{ "%.1f"|format(s.rsi) if s.rsi else '—' }}</td>
       </tr>
     {% else %}
       <tr>
-        <td colspan="8" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-          Belum ada data scan. Klik tombol <strong>Scan Sekarang</strong> untuk memulai analisa.
+        <td colspan="9" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          Belum ada data scan. Klik tombol <strong>⚡ SCAN MARKET SEKARANG</strong> untuk memulai analisa.
         </td>
       </tr>
     {% endfor %}
@@ -54,21 +90,185 @@
 </div>
 
 <script>
-  // Auto-refresh feed polling every 30 seconds
-  setInterval(async () => {
+  let currentMainKode = '{{ stocks[0].kode if stocks else "BBCA.JK" }}';
+  let mainChartData = null;
+  let mainChartInstance = null;
+  const sparklineCharts = {};
+
+  async function loadHeroChart(kode) {
+    currentMainKode = kode;
     try {
-      const response = await fetch('/api/stocks');
+      const response = await fetch('/api/chart/' + kode);
       if (!response.ok) return;
-      const data = await response.json();
-      if (!data || !data.length) return;
-      
-      const tbody = document.getElementById('stocksTableBody');
-      if (!tbody) return;
-      
-      // Keep static view updated seamlessly
+      mainChartData = await response.json();
+      renderHeroChart('1Y');
     } catch (e) {
-      console.log('Auto-refresh polling error:', e);
+      console.error('Failed to load hero chart:', e);
     }
-  }, 30000);
+  }
+
+  function renderHeroChart(tf) {
+    if (!mainChartData || !mainChartData.timestamps) return;
+    const ctx = document.getElementById('heroStockChart').getContext('2d');
+    
+    let count = mainChartData.timestamps.length;
+    if (tf === '1M') count = 22;
+    else if (tf === '3M') count = 66;
+
+    const labels = mainChartData.timestamps.slice(-count);
+    const prices = mainChartData.prices.slice(-count);
+    const ma20 = mainChartData.ma20.slice(-count);
+    const ma50 = mainChartData.ma50.slice(-count);
+    const rsi = mainChartData.rsi.slice(-count);
+
+    if (mainChartInstance) {
+      mainChartInstance.destroy();
+    }
+
+    mainChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Harga Close (Rp)',
+            data: prices,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            borderWidth: 2,
+            fill: true,
+            yAxisID: 'yPrice',
+            pointRadius: 1,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'MA20',
+            data: ma20,
+            borderColor: '#f59e0b',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yPrice'
+          },
+          {
+            label: 'MA50',
+            data: ma50,
+            borderColor: '#8b5cf6',
+            borderWidth: 1.5,
+            borderDash: [2, 2],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yPrice'
+          },
+          {
+            label: 'RSI(14)',
+            data: rsi,
+            borderColor: '#10b981',
+            borderWidth: 1.2,
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'yRsi'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#9ca3af', font: { size: 11, weight: 'bold' } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(31, 41, 55, 0.5)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+          yPrice: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            grid: { color: 'rgba(31, 41, 55, 0.5)' },
+            ticks: { color: '#9ca3af', font: { size: 10 } }
+          },
+          yRsi: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 100,
+            grid: { display: false },
+            ticks: { color: '#10b981', font: { size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  function switchMainChartStock(kode) {
+    loadHeroChart(kode);
+  }
+
+  function setMainTimeframe(tf) {
+    document.querySelectorAll('.timeframe-btn-main').forEach(btn => {
+      btn.style.background = '#334155';
+    });
+    event.target.style.background = '#1d4ed8';
+    renderHeroChart(tf);
+  }
+
+  async function loadSparklineForStock(kode) {
+    const canvas = document.getElementById('sparkline-' + kode);
+    if (!canvas) return;
+    try {
+      const resp = await fetch('/api/chart/' + kode);
+      if (!resp.ok) return;
+      const d = await resp.json();
+      if (!d || !d.prices || !d.prices.length) return;
+      
+      const pts = d.prices.slice(-20);
+      const isUp = (pts[pts.length - 1] >= pts[0]);
+      const strokeColor = isUp ? '#10b981' : '#ef4444';
+      const bgColor = isUp ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+
+      if (sparklineCharts[kode]) {
+        sparklineCharts[kode].destroy();
+      }
+
+      sparklineCharts[kode] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: pts.map((_, i) => i),
+          datasets: [{
+            data: pts,
+            borderColor: strokeColor,
+            backgroundColor: bgColor,
+            borderWidth: 1.5,
+            fill: true,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: false },
+            y: { display: false }
+          }
+        }
+      });
+    } catch (e) {
+      console.log('Sparkline error for ' + kode, e);
+    }
+  }
+
+  function loadAllSparklines() {
+    {% for s in stocks %}
+      loadSparklineForStock('{{ s.kode }}');
+    {% endfor %}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadHeroChart(currentMainKode);
+    loadAllSparklines();
+  });
 </script>
 {% endblock %}
