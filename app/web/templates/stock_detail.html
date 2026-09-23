@@ -28,6 +28,37 @@
   </div>
 </div>
 
+<!-- AI-like Automated Analysis Insight Panel -->
+<div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(to right, #f8fafc, #ffffff); border-left: 4px solid var(--primary);">
+  <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+    🧠 Rangkuman Analisis & Rekomendasi Alokasi
+  </h3>
+  <div style="font-size: 0.95rem; color: var(--text);">
+    {% if scan.risk_rating == 'LOW' and scan.skor_total >= 60 %}
+      <p style="margin: 0.3rem 0; color: #047857; font-weight: 600;">
+        ✅ Rekomendasi: SANGAT LAYAK (Skor Tinggi & Low Risk)
+      </p>
+      <p style="margin: 0.2rem 0; color: var(--text-muted);">
+        Saham ini memiliki kondisi fundamental stabil dan risiko terukur. Sangat cocok dimasukkan ke dalam alokasi dana tabungan.
+      </p>
+    {% elif scan.risk_rating == 'HIGH' %}
+      <p style="margin: 0.3rem 0; color: #b91c1c; font-weight: 600;">
+        ⚠️ Rekomendasi: HINDARI / TAHUNAN RISIKO TINGGI
+      </p>
+      <p style="margin: 0.2rem 0; color: var(--text-muted);">
+        Memiliki volatilitas atau rasio utang tinggi. Sistem mengeliminasi saham ini dari rekomendasi alokasi otomatis demi keamanan tabungan.
+      </p>
+    {% else %}
+      <p style="margin: 0.3rem 0; color: #b45309; font-weight: 600;">
+        ⚖️ Rekomendasi: NETRAL / PANTAU
+      </p>
+      <p style="margin: 0.2rem 0; color: var(--text-muted);">
+        Saham berisiko sedang. Lakukan pemantauan pergerakan indikator teknikal (MACD & RSI) sebelum eksekusi.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
 <!-- Interactive Chart Section -->
 <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
@@ -47,8 +78,18 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Fundamental Metrics & Progress Bars -->
   <div class="card">
     <h3 style="margin-top:0;">📊 Metrik Fundamental</h3>
+    <div style="margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">
+        <span>Skor Fundamental</span>
+        <span>{{ "%.1f"|format(scan.skor_fundamental) }}/100</span>
+      </div>
+      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+        <div style="width: {{ scan.skor_fundamental }}%; height: 100%; background: #2563eb; border-radius: 4px;"></div>
+      </div>
+    </div>
     <table style="box-shadow: none;">
       <tr><td>PE Ratio</td><td><strong>{{ "%.2f"|format(scan.pe) if scan.pe else 'N/A' }}</strong></td></tr>
       <tr><td>Price to Book (PBV)</td><td><strong>{{ "%.2f"|format(scan.pbv) if scan.pbv else 'N/A' }}</strong></td></tr>
@@ -58,13 +99,22 @@
     </table>
   </div>
 
+  <!-- Technical Metrics & Progress Bars -->
   <div class="card">
     <h3 style="margin-top:0;">📈 Indikator Teknikal</h3>
+    <div style="margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;">
+        <span>Skor Teknikal</span>
+        <span>{{ "%.1f"|format(scan.skor_technical) }}/100</span>
+      </div>
+      <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+        <div style="width: {{ scan.skor_technical }}%; height: 100%; background: #10b981; border-radius: 4px;"></div>
+      </div>
+    </div>
     <table style="box-shadow: none;">
       <tr><td>RSI (14)</td><td><strong>{{ "%.1f"|format(scan.rsi) if scan.rsi else 'N/A' }}</strong></td></tr>
       <tr><td>MACD Signal</td><td><span class="{{ scan.macd_signal }}">{{ scan.macd_signal }}</span></td></tr>
-      <tr><td>Skor Fundamental</td><td><strong>{{ "%.1f"|format(scan.skor_fundamental) }}</strong>/100</td></tr>
-      <tr><td>Skor Teknikal</td><td><strong>{{ "%.1f"|format(scan.skor_technical) }}</strong>/100</td></tr>
+      <tr><td>Trend MA</td><td><span class="{{ scan.trend }}">{{ scan.trend }}</span></td></tr>
     </table>
   </div>
 </div>
